@@ -1,11 +1,314 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS2 App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CS2 App</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #0e0e10;
+        color: #fff;
+        min-height: 100vh;
+        padding-bottom: 80px;
+        overflow-x: hidden;
+    }
+    /* Хедер */
+    .header {
+        background: linear-gradient(135deg, #1a1a1f 0%, #0e0e10 100%);
+        padding: 20px 16px 16px;
+        border-bottom: 1px solid #1f1f25;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(10px);
+    }
+    .header h1 {
+        font-size: 22px;
+        font-weight: 700;
+        background: linear-gradient(90deg, #ff6a00, #ffb800);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .header p {
+        font-size: 12px;
+        color: #7a7a85;
+        margin-top: 4px;
+    }
+    /* Табы */
+    .tabs {
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+        padding: 8px 16px;
+        background: #1a1a1f;
+        border: 1px solid #2a2a32;
+        border-radius: 20px;
+        color: #a0a0aa;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+    .tab.active {
+        background: linear-gradient(135deg, #ff6a00, #ffb800);
+        color: #000;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(255,106,0,0.3);
+    }
+    /* Контент */
+    .content {
+        padding: 8px 16px;
+    }
+    .section {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    .section.active {
+        display: block;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    /* Карточки */
+    .card {
+        background: #1a1a1f;
+        border: 1px solid #2a2a32;
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+    }
+    .card:active {
+        transform: scale(0.98);
+        background: #22222a;
+    }
+    .rank {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2a2a32, #1a1a1f);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+        border: 1px solid #333;
+    }
+    .rank.gold { background: linear-gradient(135deg, #ffd700, #ff9500); color: #000; border: none; }
+    .rank.silver { background: linear-gradient(135deg, #c0c0c0, #808080); color: #000; border: none; }
+    .rank.bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: #fff; border: none; }
+    .info {
+        flex: 1;
+        min-width: 0;
+    }
+    .name {
+        font-size: 15px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .sub {
+        font-size: 12px;
+        color: #7a7a85;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .value {
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffb800;
+        flex-shrink: 0;
+    }
+    /* Загрузка */
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #7a7a85;
+    }
+    .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #2a2a32;
+        border-top-color: #ff6a00;
+        border-radius: 50%;
+        margin: 0 auto 12px;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Футер */
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px 16px;
+        background: linear-gradient(to top, #0e0e10 70%, transparent);
+        text-align: center;
+        font-size: 11px;
+        color: #5a5a65;
+    }
+</style>
 </head>
 <body>
-    <h1>CS2 App — работает!</h1>
+
+<div class="header">
+    <h1>🎮 CS2 App</h1>
+    <p>Рейтинг HLTV • Обновлено: 12 октября 2026</p>
+</div>
+
+<div class="tabs">
+    <div class="tab active" data-tab="teams">🏆 Команды</div>
+    <div class="tab" data-tab="players">👤 Игроки</div>
+</div>
+
+<div class="content">
+    <div class="section active" id="teams">
+        <div class="loading"><div class="spinner"></div>Загрузка команд...</div>
+    </div>
+    <div class="section" id="players">
+        <div class="loading"><div class="spinner"></div>Загрузка игроков...</div>
+    </div>
+</div>
+
+<div class="footer">CS2 App • Данные: HLTV.org</div>
+
+<script>
+    // Данные (дублируем из hltv_data.py, потому что Mini App не может импортировать Python)
+    const TOP_TEAMS = [
+        {rank: 1, name: "Spirit", country: "🇷🇺", points: 972},
+        {rank: 2, name: "Vitality", country: "🇪🇺", points: 894},
+        {rank: 3, name: "MOUZ", country: "🇪🇺", points: 692},
+        {rank: 4, name: "FURIA", country: "🇧🇷", points: 527},
+        {rank: 5, name: "Falcons", country: "🇪🇺", points: 488},
+        {rank: 6, name: "Aurora", country: "🇹🇷", points: 461},
+        {rank: 7, name: "Legacy", country: "🇧🇷", points: 379},
+        {rank: 8, name: "G2", country: "🇪🇺", points: 338},
+        {rank: 9, name: "FUT", country: "🇪🇺", points: 319},
+        {rank: 10, name: "Natus Vincere", country: "🇪🇺", points: 216},
+        {rank: 11, name: "PARIVISION", country: "🇷🇺", points: 178},
+        {rank: 12, name: "MIBR", country: "🇧🇷", points: 163},
+        {rank: 13, name: "1win", country: "🇷🇺", points: 159},
+        {rank: 14, name: "BETBOOM", country: "🇷🇺", points: 148},
+        {rank: 15, name: "Astralis", country: "🇩🇰", points: 133},
+        {rank: 16, name: "FaZe", country: "🇪🇺", points: 129},
+        {rank: 17, name: "9z Team", country: "🇦🇷", points: 124},
+        {rank: 18, name: "M80", country: "🇺🇸", points: 109},
+        {rank: 19, name: "B8", country: "🇺🇦", points: 99},
+        {rank: 20, name: "Envy", country: "🇺🇸", points: 96},
+    ];
+
+    const TOP_PLAYERS = [
+        {rank: 1, nick: "ZywOo", country: "🇫🇷", team: "Vitality"},
+        {rank: 2, nick: "donk", country: "🇷🇺", team: "Spirit"},
+        {rank: 3, nick: "ropz", country: "🇪🇪", team: "Vitality"},
+        {rank: 4, nick: "m0NESY", country: "🇷🇺", team: "Falcons"},
+        {rank: 5, nick: "sh1ro", country: "🇷🇺", team: "Spirit"},
+        {rank: 6, nick: "molodoy", country: "🇰🇿", team: "FURIA"},
+        {rank: 7, nick: "flameZ", country: "🇮🇱", team: "Vitality"},
+        {rank: 8, nick: "frozen", country: "🇸🇰", team: "FaZe"},
+        {rank: 9, nick: "KSCERATO", country: "🇧🇷", team: "FURIA"},
+        {rank: 10, nick: "Spinx", country: "🇮🇱", team: "MOUZ"},
+        {rank: 11, nick: "Twistzz", country: "🇨🇦", team: "FaZe"},
+        {rank: 12, nick: "mezii", country: "🇬🇧", team: "Vitality"},
+        {rank: 13, nick: "Senzu", country: "🇲🇳", team: "The MongolZ"},
+        {rank: 14, nick: "XANTARES", country: "🇹🇷", team: "Aurora"},
+        {rank: 15, nick: "YEKINDAR", country: "🇱🇻", team: "FURIA"},
+        {rank: 16, nick: "xertioN", country: "🇮🇱", team: "MOUZ"},
+        {rank: 17, nick: "torzsi", country: "🇭🇺", team: "MOUZ"},
+        {rank: 18, nick: "NiKo", country: "🇧🇦", team: "Falcons"},
+        {rank: 19, nick: "iM", country: "🇷🇴", team: "NAVI"},
+        {rank: 20, nick: "b1t", country: "🇺🇦", team: "NAVI"},
+    ];
+
+    // Рендер команд
+    function renderTeams() {
+        const el = document.getElementById('teams');
+        let html = '';
+        TOP_TEAMS.forEach(t => {
+            let rankClass = '';
+            if (t.rank === 1) rankClass = 'gold';
+            else if (t.rank === 2) rankClass = 'silver';
+            else if (t.rank === 3) rankClass = 'bronze';
+            html += `
+                <div class="card">
+                    <div class="rank ${rankClass}">${t.rank}</div>
+                    <div class="info">
+                        <div class="name">${t.country} ${t.name}</div>
+                    </div>
+                    <div class="value">${t.points}</div>
+                </div>
+            `;
+        });
+        el.innerHTML = html;
+    }
+
+    // Рендер игроков
+    function renderPlayers() {
+        const el = document.getElementById('players');
+        let html = '';
+        TOP_PLAYERS.forEach(p => {
+            let rankClass = '';
+            if (p.rank === 1) rankClass = 'gold';
+            else if (p.rank === 2) rankClass = 'silver';
+            else if (p.rank === 3) rankClass = 'bronze';
+            html += `
+                <div class="card">
+                    <div class="rank ${rankClass}">${p.rank}</div>
+                    <div class="info">
+                        <div class="name">${p.country} ${p.nick}</div>
+                        <div class="sub">${p.team}</div>
+                    </div>
+                </div>
+            `;
+        });
+        el.innerHTML = html;
+    }
+
+    // Переключение табов
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Инициализация
+    renderTeams();
+    renderPlayers();
+
+    // Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('#0e0e10');
+        tg.setBackgroundColor('#0e0e10');
+    }
+</script>
 </body>
 </html>
